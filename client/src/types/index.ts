@@ -32,3 +32,21 @@ export enum Actions {
   SendTransaction = "SEND_TRANSACTION",
 }
 
+export enum TransactionFields {
+  "sender" = "sender",
+  "recipient"  = "recipient",
+  "amount" = "amount"
+}
+
+export interface InputProps {
+    id: TransactionFields;
+    value: string;
+    placeholder?: string;
+    disabled?: boolean;
+}
+
+export interface TransactionData {
+  sender: string;
+  recipient: string;
+  amount: string;
+}

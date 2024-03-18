@@ -1,6 +1,5 @@
 import { takeEvery } from "redux-saga/effects";
 import {
-  JsonRpcProvider,
   Transaction,
   TransactionResponse,
   TransactionReceipt,
@@ -9,33 +8,22 @@ import {
 } from "ethers";
 
 import apolloClient from "../apollo/client";
-import { Actions } from "../types";
+import { Action, Actions, TransactionData } from "../types";
 import { SaveTransaction } from "../queries";
+import { navigate } from "../components/NaiveRouter";
 
-function* sendTransaction() {
-  const provider = new JsonRpcProvider("http://localhost:8545");
-
+function* sendTransaction(data: Action<TransactionData>) {
   const walletProvider = new BrowserProvider(window.web3.currentProvider);
 
   const signer: Signer = yield walletProvider.getSigner();
 
-  const accounts: Array<{ address: string }> = yield provider.listAccounts();
-
-  const randomAddress = () => {
-    const min = 1;
-    const max = 19;
-    const random = Math.round(Math.random() * (max - min) + min);
-    return accounts[random].address;
-  };
-
   const transaction = {
-    to: randomAddress(),
-    value: 1000000000000000000,
+    to: data.payload.recipient,
+    value: Number(data.payload.amount),
   };
 
   try {
-    const txResponse: TransactionResponse =
-      yield signer.sendTransaction(transaction);
+    const txResponse: TransactionResponse = yield signer.sendTransaction(transaction);
     const response: TransactionReceipt = yield txResponse.wait();
 
     const receipt: Transaction = yield response.getTransaction();
@@ -56,9 +44,16 @@ function* sendTransaction() {
     yield apolloClient.mutate({
       mutation: SaveTransaction,
       variables,
-    });
+    }).then(res => {
+      if (res.data?.addTransaction?.hash) {
+        document!.getElementById("hs-basic-modal")!.classList.toggle("hidden");
+        document!.getElementById("loading-spinner")!.classList.toggle("show");
+        navigate(`/transaction/${res.data.addTransaction.hash}`);
+      }
+
+    })
   } catch (error) {
-    //
+    document!.getElementById("loading-spinner")!.classList.toggle("show");
   }
 }
 

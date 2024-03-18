@@ -1,10 +1,22 @@
 import React, { useCallback, useState } from "react";
 import Onboard, { WalletState } from "@web3-onboard/core";
+import metamaskSDK from '@web3-onboard/metamask';
 
 import SendTransaction from "./SendTransaction";
+import { navigate } from "./NaiveRouter";
+
+
+const metamaskSDKWallet = metamaskSDK({options: {
+  extensionOnly: false,
+  dappMetadata: {
+    name: 'Demo Web3Onboard'
+  }
+}})
 
 const onboard = Onboard({
-  wallets: [],
+  wallets: [
+    metamaskSDKWallet
+  ],
   chains: [
     {
       id: "123456",
@@ -24,6 +36,7 @@ const Navigation: React.FC = () => {
     const [metamaskWallet] = wallets;
 
     if (
+      metamaskWallet &&
       metamaskWallet.label === "MetaMask" &&
       metamaskWallet.accounts[0].address
     ) {
@@ -33,17 +46,16 @@ const Navigation: React.FC = () => {
 
   return (
     <header className="flex flex-wrap sm:justify-start sm:flex-nowrap z-50 w-ful text-sm py-4 bg-gray-800">
-      <nav className="max-w-[85rem] w-full mx-auto px-4 sm:flex sm:items-center sm:justify-between">
+      <nav className="max-w-[85rem] w-full mx-auto px-4 flex items-center justify-between">
         <div className="flex items-center justify-between">
-          <a
-            className="flex-none text-xl font-semibold dark:text-white"
-            href="."
+          <a className="flex-none text-xl font-semibold dark:text-white cursor-pointer"
+            onClick={() => navigate(`/`)}
           >
             Transactions List
           </a>
         </div>
-        <div className="hs-collapse hidden overflow-hidden transition-all duration-300 basis-full grow sm:block">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-end sm:mt-0 sm:pl-5">
+        <div className="hs-collapse transition-all duration-300 grow sm:block shrink ">
+          <div className="flex flex-row flex-wrap gap-5 flex-row items-end justify-end mt-0 pl-5">
             {wallet && (
               <>
                 <SendTransaction />
